@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/nvml"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
 
@@ -30,33 +30,26 @@ func GetGPUTopoNum(pod *v1.Pod) int64 {
 	return gpuTopoNum
 }
 
+var linkScoreTable = map[nvml.P2PLinkType]int{
+	nvml.P2PLinkCrossCPU:     1,
+	nvml.P2PLinkSameCPU:      2,
+	nvml.P2PLinkHostBridge:   3,
+	nvml.P2PLinkMultiSwitch:  4,
+	nvml.P2PLinkSingleSwitch: 5,
+	nvml.P2PLinkSameBoard:    6,
+	nvml.SingleNVLINKLink:    4,
+	nvml.TwoNVLINKLinks:      5,
+	nvml.ThreeNVLINKLinks:    6,
+	nvml.FourNVLINKLinks:     7,
+	nvml.FiveNVLINKLinks:     8,
+	nvml.SixNVLINKLinks:      9,
+	nvml.P2PLinkUnknown:      0,
+}
+
 func makeLinkScore(t nvml.P2PLinkType) int {
-	switch t {
-	case nvml.P2PLinkCrossCPU:
-		return 1
-	case nvml.P2PLinkSameCPU:
-		return 2
-	case nvml.P2PLinkHostBridge:
-		return 3
-	case nvml.P2PLinkMultiSwitch:
-		return 4
-	case nvml.P2PLinkSingleSwitch:
-		return 5
-	case nvml.P2PLinkSameBoard:
-		return 6
-	case nvml.SingleNVLINKLink:
-		return 4
-	case nvml.TwoNVLINKLinks:
-		return 5
-	case nvml.ThreeNVLINKLinks:
-		return 6
-	case nvml.FourNVLINKLinks:
-		return 7
-	case nvml.FiveNVLINKLinks:
-		return 8
-	case nvml.SixNVLINKLinks:
-		return 9
-	case nvml.P2PLinkUnknown:
+	score, exists := linkScoreTable[t]
+	if !exists {
+		score = 0
 	}
-	return 0
+	return score
 }
